@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LoanAI – AI Loan Approval Prediction</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#0f1b3d;--mut:#5b6788;--line:#e1e6f2;--pri:#2f5bea;--pri2:#18a2c4;--ok:#12a150;--bad:#d8433b;--warn:#e19a14;--hero:linear-gradient(135deg,#102a76,#2f5bea 60%,#18a2c4);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1020;--card:#141b33;--ink:#eaf0ff;--mut:#9aa7cc;--line:#252e4d;--pri:#6d8cff;--pri2:#3cc4e4;--hero:linear-gradient(135deg,#0a1744,#2343b8 60%,#117f9c)}}
+:root[data-theme="dark"]{--bg:#0b1020;--card:#141b33;--ink:#eaf0ff;--mut:#9aa7cc;--line:#252e4d;--pri:#6d8cff;--pri2:#3cc4e4;--hero:linear-gradient(135deg,#0a1744,#2343b8 60%,#117f9c)}
+html{scroll-behavior:smooth;scroll-padding-top:calc(70px + env(safe-area-inset-top,0px))}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--card);z-index:60}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--card);border-bottom:1px solid var(--line)}
+.nav{max-width:1080px;margin:auto;display:flex;align-items:center;justify-content:space-between;padding:12px 20px}
+.logo{font-weight:800;font-size:1.3rem;color:var(--pri);text-decoration:none}.logo span{color:var(--ink)}
+nav{display:flex;gap:6px;align-items:center}
+nav a{color:var(--mut);text-decoration:none;padding:8px 14px;border-radius:8px;font-weight:600;font-size:.95rem}
+nav a:hover,nav a.on{background:var(--bg);color:var(--pri)}
+#theme{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:7px 10px;cursor:pointer;font-size:1rem}
+.hero{background:var(--hero);color:#fff;text-align:center;padding:90px 20px 100px}
+.hero h1{font-size:clamp(2rem,5vw,3.2rem);margin:0 0 14px;line-height:1.15}
+.hero p{max-width:620px;margin:0 auto 28px;opacity:.92;font-size:1.1rem}
+.btn{display:inline-block;border:0;cursor:pointer;background:var(--pri);color:#fff;padding:13px 28px;border-radius:10px;font-weight:700;font-size:1rem;text-decoration:none}
+.btn:hover{filter:brightness(1.1)}
+.hero .btn{background:#fff;color:#102a76}
+.btn.ghost{background:transparent;color:var(--pri);border:1.5px solid var(--pri)}
+.stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:40px}
+.stats div{background:rgba(255,255,255,.14);border-radius:12px;padding:12px 22px;min-width:130px}
+.stats b{display:block;font-size:1.4rem}
+section{max-width:1080px;margin:auto;padding:64px 20px}
+h2{font-size:1.9rem;margin:0 0 6px}.sub{color:var(--mut);margin:0 0 28px}
+.grid{display:grid;grid-template-columns:1.2fr 1fr;gap:24px;align-items:start}
+@media(max-width:820px){.grid{grid-template-columns:1fr}nav a{padding:8px 9px}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 6px 24px rgba(20,40,100,.06)}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:520px){.f{grid-template-columns:1fr}}
+label{display:block;font-size:.85rem;font-weight:600;color:var(--mut);margin-bottom:5px}
+input,select{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus,select:focus{outline:none;border-color:var(--pri)}
+.err{border-color:var(--bad)!important}
+.row{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.empty{text-align:center;color:var(--mut);padding:40px 10px}
+.empty .ic{font-size:2.6rem}
+.gauge{width:170px;height:170px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:conic-gradient(var(--c) calc(var(--p)*1%),var(--line) 0)}
+.gauge div{width:134px;height:134px;border-radius:50%;background:var(--card);display:grid;place-items:center;text-align:center}
+.gauge b{font-size:2.2rem;line-height:1}.gauge small{color:var(--mut)}
+.badge{display:inline-block;padding:6px 16px;border-radius:99px;color:#fff;font-weight:800;margin-bottom:6px}
+.res{text-align:center}
+.bars{margin-top:18px;text-align:left}
+.bar{margin:9px 0;font-size:.85rem}.bar .t{display:flex;justify-content:space-between;color:var(--mut)}
+.bar .tr{height:7px;background:var(--line);border-radius:5px;overflow:hidden;margin-top:3px}.bar .tr i{display:block;height:100%;background:var(--pri2);border-radius:5px}
+.tip{background:var(--bg);border-radius:10px;padding:10px 12px;font-size:.88rem;color:var(--mut);margin-top:14px;text-align:left}
+.meta{display:flex;justify-content:space-around;margin-top:14px;font-size:.85rem;color:var(--mut)}.meta b{display:block;color:var(--ink);font-size:1rem}
+table{width:100%;border-collapse:collapse;font-size:.88rem;margin-top:8px}
+th,td{padding:8px 6px;text-align:left;border-bottom:1px solid var(--line)}th{color:var(--mut)}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-top:24px}
+.cards3 .card h3{margin:8px 0}.cards3 .card p{margin:0;color:var(--mut)}.big{font-size:2rem}
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:20px}
+.how div{border-left:3px solid var(--pri);padding:4px 14px;color:var(--mut)}.how b{color:var(--ink);display:block}
+.btn.sm{padding:8px 16px;font-size:.88rem}
+input[type=range]{padding:0;border:0;background:none;accent-color:var(--pri)}
+.modal{position:fixed;inset:0;background:rgba(5,10,30,.6);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal[hidden]{display:none}
+.mbox{width:100%;max-width:380px;position:relative}
+#mx{position:absolute;right:12px;top:10px;border:0;background:none;color:var(--mut);font-size:1.1rem;cursor:pointer}
+.tabs{display:flex;gap:6px;margin-bottom:16px}
+.tabs button{flex:1;padding:9px;border:0;border-radius:8px;background:var(--bg);color:var(--mut);font-weight:700;cursor:pointer}
+.tabs button.on{background:var(--pri);color:#fff}
+#af input{margin-bottom:12px}#am{color:var(--bad);font-size:.85rem;min-height:1.2em;margin:0 0 8px}
+.note{font-size:.78rem;color:var(--mut);margin:12px 0 0}
+.pill{display:inline-block;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);padding:6px 16px;border-radius:99px;font-size:.82rem;font-weight:600;letter-spacing:.04em;margin-bottom:18px}
+.eyebrow{color:var(--pri);font-weight:800;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.defbox{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--pri);border-radius:16px;padding:32px;box-shadow:0 6px 24px rgba(20,40,100,.06)}
+.defbox h3{font-size:clamp(1.4rem,3vw,2rem);line-height:1.25;margin:0 0 14px}
+.defbox p{color:var(--mut);font-size:1.05rem;margin:0 0 12px}
+.defbox p b{color:var(--ink)}
+.pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-top:22px}
+.pillars div{background:var(--bg);border-radius:12px;padding:14px 16px;font-size:.9rem;color:var(--mut)}.pillars b{display:block;color:var(--pri);font-size:1.5rem}
+.gl{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:18px}
+.gl .card{padding:18px}.gl h4{margin:0 0 6px;color:var(--pri)}.gl p{margin:0;color:var(--mut);font-size:.9rem}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:18px;counter-reset:s}
+.steps .card{padding:20px;position:relative}.steps .card::before{counter-increment:s;content:counter(s);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--pri);color:#fff;font-weight:800;margin-bottom:10px}
+.steps h4{margin:0 0 4px}.steps p{margin:0;color:var(--mut);font-size:.9rem}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-top:10px}
+summary{cursor:pointer;font-weight:700}details p{color:var(--mut);margin:10px 0 0}
+.h3s{font-size:1.25rem;margin:36px 0 0}
+.foot{max-width:1080px;margin:auto;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;text-align:left}
+.foot a{color:var(--mut);text-decoration:none;display:block;margin:4px 0}.foot a:hover{color:var(--pri)}
+.disc{max-width:1080px;margin:18px auto 0;font-size:.78rem;border-top:1px solid var(--line);padding-top:14px}
+.nav{flex-wrap:wrap;gap:8px}nav{flex-wrap:wrap}
+.donut{background:conic-gradient(var(--pri2) calc(var(--p)*1%),var(--pri) 0)}
+.spark{display:flex;align-items:flex-end;gap:8px;height:90px;margin:14px 0 6px}.spark i{flex:1;border-radius:4px 4px 0 0;min-height:4px}
+.mini{padding:5px 12px;font-size:.8rem;border-radius:8px;border:1px solid var(--pri);background:none;color:var(--pri);cursor:pointer;font-weight:700}
+.top{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));width:44px;height:44px;border-radius:50%;border:0;background:var(--pri);color:#fff;font-size:1.2rem;cursor:pointer;display:none;z-index:40;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+@media print{header,.hero,#definition,#tools,#about,footer,#histbox,.row,.top,.modal,.tip input,#prediction .grid>.card:first-child{display:none!important}#prediction .grid{display:block}:root:not([data-theme="light"]),:root[data-theme="dark"],:root{--bg:#fff;--card:#fff;--ink:#000;--mut:#444;--line:#ccc}body{background:#fff}body::before{display:none}}
+footer{text-align:center;color:var(--mut);padding:28px 20px;border-top:1px solid var(--line);background:var(--card);font-size:.9rem}
+</style>
+</head>
+<body>
+<header><div class="nav">
+<a class="logo" href="#home">Loan<span>AI</span></a>
+<nav><a href="#home" data-s="home">Home</a><a href="#definition" data-s="definition">Definition</a><a href="#prediction" data-s="prediction">Prediction</a><a href="#tools" data-s="tools">Tools</a><a href="#about" data-s="about">About</a><button class="btn sm" id="authBtn">Login</button><button id="theme" title="Toggle theme" aria-label="Toggle theme">🌓</button></nav>
+</div></header>
+
+<div class="hero" id="home">
+<span class="pill">AI-POWERED · INSTANT · PRIVATE</span>
+<h1>AI-Based Loan Approval Prediction</h1>
+<p>Predict your loan approval status in seconds using applicant financial and personal information.</p>
+<a class="btn" href="#prediction">Start Prediction</a>
+<div class="stats"><div><b class="cnt" data-n="9">9</b>Input factors</div><div><b>Instant</b>Results</div><div><b><span class="cnt" data-n="100">100</span>%</b>Private, in-browser</div></div>
+</div>
+
+<section id="definition">
+<div class="eyebrow">Definition</div>
+<h2>What is AI Loan Approval Prediction?</h2>
+<p class="sub">A clear, plain-language overview of the concept behind this project.</p>
+<div class="defbox">
+<h3>AI loan approval prediction is the use of data-driven models to estimate, before a lender decides, whether a loan application is likely to be approved or rejected.</h3>
+<p>By analysing applicant information such as <b>income, credit history, loan amount, education, employment type and property location</b>, the system produces an <b>approval score</b> and a clear outcome. Applicants learn their chances in advance, and lenders can screen applications faster, more consistently and with less manual effort.</p>
+<p>Traditional approval relies on manual review of documents, which is slow and can vary between officers. Prediction systems learn from patterns in past applications, such as how repayment ability and credit behaviour relate to repayment risk, and apply those patterns the same way to every applicant.</p>
+<div class="pillars"><div><b>Faster</b>Results in seconds instead of days</div><div><b>Consistent</b>Same rules for every applicant</div><div><b>Transparent</b>Score shown with a factor breakdown</div><div><b>Actionable</b>Tips to improve your chances</div></div>
+</div>
+
+<h3 class="h3s">Key terms explained</h3>
+<div class="gl">
+<div class="card"><h4>Credit History</h4><p>A record of past borrowing and repayment. Good (1) means loans were repaid on time; poor (0) signals missed or late payments.</p></div>
+<div class="card"><h4>EMI</h4><p>Equated Monthly Instalment: the fixed amount you pay every month, covering both principal and interest.</p></div>
+<div class="card"><h4>EMI-to-Income Ratio</h4><p>Your monthly EMI divided by total monthly income. Lenders prefer this below about 30–45%.</p></div>
+<div class="card"><h4>Loan Tenure</h4><p>The repayment period in years. A longer tenure lowers the EMI but increases total interest paid.</p></div>
+<div class="card"><h4>Co-Applicant</h4><p>A second person, often a spouse or relative, whose income is added to strengthen the application.</p></div>
+<div class="card"><h4>Property Area</h4><p>Urban, Semi-Urban or Rural location of the property, which influences valuation and lender risk.</p></div>
+<div class="card"><h4>Approval Score</h4><p>A 0–100 value computed from all factors. A score of 60 or more is predicted as approved.</p></div>
+<div class="card"><h4>Prediction Model</h4><p>The logic that turns applicant data into a score. This demo uses a weighted scoring model inspired by machine learning.</p></div>
+</div>
+
+<h3 class="h3s">How the prediction works</h3>
+<div class="steps">
+<div class="card"><h4>Collect details</h4><p>You enter personal, income, loan and property information.</p></div>
+<div class="card"><h4>Calculate EMI</h4><p>The monthly instalment is computed from loan amount, tenure and interest rate.</p></div>
+<div class="card"><h4>Score the factors</h4><p>Credit history, affordability and profile each add weighted points.</p></div>
+<div class="card"><h4>Decision and advice</h4><p>You get the result, a factor breakdown and a suggestion to improve.</p></div>
+</div>
+
+<h3 class="h3s">Frequently asked questions</h3>
+<details><summary>Is this a real bank decision?</summary><p>No. This is an educational demonstration. Real lenders apply their own policies, document checks and credit bureau reports.</p></details>
+<details><summary>Why does a poor credit history always lead to rejection?</summary><p>Credit history is the strongest indicator of repayment behaviour, so it carries the largest weight. With a poor history, the maximum possible score stays below the approval threshold.</p></details>
+<details><summary>Is my data stored or shared?</summary><p>No financial details leave your browser. Only login details and your saved history are kept locally on your own device.</p></details>
+<details><summary>Why is gender not used in the score?</summary><p>Gender is collected only for completeness. Using it to decide loans would be unfair and is not allowed in responsible lending, so it has no effect on the result.</p></details>
+</section>
+
+<section id="prediction" style="padding-top:20px">
+<div class="eyebrow">Try it</div>
+<h2 id="ptitle">Loan Prediction</h2>
+<p class="sub">Enter the applicant details below to predict the possible loan approval status.</p>
+<div class="grid">
+<div class="card"><form id="form" novalidate onsubmit="return false">
+<div class="f">
+<div><label for="gender">Gender</label><select id="gender"><option value="">Select Gender</option><option>Male</option><option>Female</option></select></div>
+<div><label for="married">Married</label><select id="married"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+<div><label for="edu">Education</label><select id="edu"><option value="">Select Education</option><option>Graduate</option><option>Not Graduate</option></select></div>
+<div><label for="self">Self Employed</label><select id="self"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+<div><label for="inc">Applicant Income (₹ / month)</label><input id="inc" type="number" min="0" placeholder="e.g. 50000"></div>
+<div><label for="co">Co-Applicant Income (₹ / month)</label><input id="co" type="number" min="0" placeholder="e.g. 20000"></div>
+<div><label for="amt">Loan Amount (₹)</label><input id="amt" type="number" min="1" placeholder="e.g. 2500000"></div>
+<div><label for="ten">Tenure (years)</label><select id="ten"><option>5</option><option>10</option><option>15</option><option selected>20</option><option>25</option><option>30</option></select></div>
+<div><label for="cred">Credit History</label><select id="cred"><option value="">Select</option><option value="1">Good (1)</option><option value="0">Poor (0)</option></select></div>
+<div><label for="area">Property Area</label><select id="area"><option value="">Select Area</option><option>Urban</option><option>Semi-Urban</option><option>Rural</option></select></div>
+</div>
+<div class="row"><button class="btn" id="go">Predict Loan Status</button><button class="btn ghost" id="demo" type="button">Fill sample data</button></div>
+</form></div>
+
+<div class="card" id="out" aria-live="polite">
+<div class="empty"><div class="ic">📊</div><p><b>Prediction Score</b><br>Fill the form and press “Predict Loan Status”.</p></div>
+</div>
+</div>
+<div class="card" id="histbox" style="margin-top:24px;display:none">
+<b>Recent predictions</b>
+<div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Income</th><th>Loan</th><th>Credit</th><th>Score</th><th>Result</th></tr></thead><tbody id="hist"></tbody></table></div>
+</div>
+</section>
+
+<section id="tools" style="padding-top:20px">
+<div class="eyebrow">Tools</div>
+<h2>EMI Calculator &amp; Insights</h2>
+<p class="sub">Plan your repayment, track your predictions and learn how to strengthen your application.</p>
+<div class="grid">
+<div class="card"><b>🧮 EMI Calculator</b><div class="f" style="margin-top:14px">
+<div><label for="ca">Loan amount (₹)</label><input id="ca" type="number" min="0" value="2500000"></div>
+<div><label for="cr">Interest rate (% p.a.)</label><input id="cr" type="number" min="0" step="0.1" value="9"></div>
+<div style="grid-column:1/-1"><label for="cy">Tenure: <span id="cyv">20</span> years</label><input id="cy" type="range" min="1" max="30" value="20"></div></div>
+<div class="meta"><div><b id="ce">–</b>Monthly EMI</div><div><b id="ci">–</b>Total interest</div><div><b id="ct">–</b>Total payment</div></div></div>
+<div class="card" style="text-align:center"><b>Principal vs interest</b><div class="gauge donut" id="dn" style="margin-top:16px"><div><span><b id="dp">0%</b><small>interest</small></span></div></div>
+<p class="sub" style="margin:0"><span style="color:var(--pri)">●</span> Principal &nbsp; <span style="color:var(--pri2)">●</span> Interest</p></div>
+</div>
+<div class="card" id="dash" style="margin-top:24px"></div>
+<h3 class="h3s">Loan types at a glance</h3>
+<div class="card" style="margin-top:14px;overflow-x:auto"><table><thead><tr><th>Loan type</th><th>Indicative rate</th><th>Typical tenure</th><th></th></tr></thead><tbody>
+<tr><td>Home loan</td><td>8.5–10.5%</td><td>15–30 yrs</td><td><button class="mini" onclick="useRate(9.5,20)">Use</button></td></tr>
+<tr><td>Education loan</td><td>9–13%</td><td>5–15 yrs</td><td><button class="mini" onclick="useRate(11,10)">Use</button></td></tr>
+<tr><td>Car loan</td><td>8.5–11.5%</td><td>3–7 yrs</td><td><button class="mini" onclick="useRate(10,5)">Use</button></td></tr>
+<tr><td>Personal loan</td><td>11–18%</td><td>1–5 yrs</td><td><button class="mini" onclick="useRate(14,5)">Use</button></td></tr>
+</tbody></table><p class="note">Ranges are indicative only and change often. Always confirm current rates with your lender.</p></div>
+<h3 class="h3s">Tips to improve your chances</h3>
+<div class="cards3">
+<div class="card"><div class="big">📈</div><h3>Build your credit</h3><p>Pay every EMI and card bill on time, and keep card usage well below your limit.</p></div>
+<div class="card"><div class="big">⚖️</div><h3>Keep EMI affordable</h3><p>Aim for an EMI under 40% of total monthly income. Use the what-if slider to find your sweet spot.</p></div>
+<div class="card"><div class="big">👥</div><h3>Add a co-applicant</h3><p>A second income raises affordability and strengthens the application.</p></div>
+<div class="card"><div class="big">📄</div><h3>Prepare documents</h3><p>Keep ID proof, address proof, income proofs, bank statements and property papers ready.</p></div>
+</div>
+</section>
+
+<section id="about" style="padding-top:20px">
+<h2>About The Project</h2>
+<p class="sub">The AI-Based Loan Approval Prediction System is a simple machine-learning inspired web application that predicts whether a loan application may be approved or rejected.</p>
+<div class="cards3">
+<div class="card"><div class="big">🤖</div><h3>AI Prediction</h3><p>Uses applicant information to generate a weighted prediction score and result.</p></div>
+<div class="card"><div class="big">📊</div><h3>Simple Analysis</h3><p>Considers income, loan amount, EMI burden and credit history, with a factor breakdown.</p></div>
+<div class="card"><div class="big">⚡</div><h3>Easy To Use</h3><p>Simple interface suitable for students and project demonstrations.</p></div>
+</div>
+<div class="card" style="margin-top:24px"><b>How the score works</b>
+<div class="how">
+<div><b>Credit history · 40</b>Good history is the strongest signal.</div>
+<div><b>EMI affordability · 30</b>EMI vs. total monthly income (9% interest assumed).</div>
+<div><b>Profile · 30</b>Education, employment, co-applicant, marital status, property area.</div>
+</div>
+<p class="sub" style="margin:14px 0 0;font-size:.85rem">Approved at a score of 60 or more. Gender is collected but intentionally not used in scoring, to avoid bias. This is an educational demo, not financial advice or a real bank decision.</p></div>
+</section>
+
+<footer><div class="foot"><div><b style="color:var(--ink);font-size:1.1rem">LoanAI</b><br>AI-based loan approval prediction<br>for students and project demos.</div><div><b style="color:var(--ink)">Explore</b><a href="#home">Home</a><a href="#definition">Definition</a><a href="#prediction">Prediction</a><a href="#about">About</a></div></div>
+<div class="disc">© 2026 AI-Based Loan Approval Prediction System. Educational demo only; results are not financial advice or a real lending decision.</div></footer>
+
+<button class="top" id="top" aria-label="Back to top">↑</button>
+<div class="modal" id="modal" hidden><div class="card mbox"><button id="mx" aria-label="Close">✕</button>
+<div class="tabs"><button data-t="in" class="on">Login</button><button data-t="up">Sign up</button></div>
+<form id="af" onsubmit="return false"><div id="nameW" hidden><label for="an">Name</label><input id="an" placeholder="Your name"></div>
+<label for="ae">Email</label><input id="ae" type="email" placeholder="you@example.com">
+<label for="ap">Password</label><input id="ap" type="password" placeholder="Min 6 characters">
+<p id="am"></p><button class="btn" id="as" style="width:100%">Login</button></form>
+<p class="note">Demo login: accounts are stored only in this browser. Log in to save your prediction history between visits.</p></div></div>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=n=>"₹"+Math.round(n).toLocaleString("en-IN");
+let hist=[];
+function emi(P,y,r=9){const i=r/1200,n=y*12;return P*i*Math.pow(1+i,n)/(Math.pow(1+i,n)-1)}
+function validate(){
+  let ok=true;
+  ["gender","married","edu","self","cred","area","inc","amt"].forEach(k=>{const e=$(k),bad=e.value==="";e.classList.toggle("err",bad);if(bad)ok=false});
+  const c=$("co");c.classList.remove("err");
+  if(c.value!==""&&+c.value<0){c.classList.add("err");ok=false}
+  return ok;
+}
+function predict(){return calc(+$("amt").value,+$("ten").value)}
+function maxLoan(yrs){if(calc(1e4,yrs).score<60)return 0;let lo=0,hi=2e8;for(let i=0;i<40;i++){const m=(lo+hi)/2;calc(m,yrs).approved?lo=m:hi=m}return lo}
+function calc(amt,yrs){
+  const inc=+$("inc").value,co=+($("co").value||0);
+  const E=emi(amt,yrs),total=inc+co,ratio=total>0?E/total:9;
+  const credit=$("cred").value==="1"?40:0;
+  const aff=ratio<=.3?30:ratio<=.45?20:ratio<=.6?8:0;
+  const prof=(($("edu").value==="Graduate")?6:2)+(($("self").value==="No")?4:1)+(co>0?5:0)+(($("married").value==="Yes")?5:2)+({"Semi-Urban":8,Urban:6,Rural:4}[$("area").value]);
+  const score=credit+aff+prof,approved=score>=60;
+  return {score,approved,E,ratio,parts:[["Credit history",credit,40],["EMI affordability",aff,30],["Applicant profile",Math.min(prof,30),30]],inc,amt,yrs,cred:credit>0};
+}
+function show(r){
+  const col=r.approved?"var(--ok)":"var(--bad)";const ml=maxLoan(r.yrs);
+  let tip=r.approved?"Strong application. Keep documents ready and compare lender rates.":
+    !r.cred?"A poor credit history is the main blocker. Clear dues and rebuild your score before re-applying.":
+    r.ratio>.45?"EMI is high versus income. Try a lower loan amount, longer tenure, or add a co-applicant.":"Improve your profile (co-applicant, stable income) and try again.";
+  $("out").innerHTML=`<div class="res"><div class="gauge" style="--p:${r.score};--c:${col}"><div><span><b>${r.score}</b><small>/100</small></span></div></div>
+  <span class="badge" style="background:${col}">${r.approved?"✔ Likely Approved":"✖ Likely Rejected"}</span>
+  <div class="meta"><div><b>${fmt(r.E)}</b>Est. EMI / month</div><div><b>${Math.round(r.ratio*100)}%</b>EMI-to-income</div></div>
+  <div class="bars">${r.parts.map(p=>`<div class="bar"><div class="t"><span>${p[0]}</span><span>${p[1]}/${p[2]}</span></div><div class="tr"><i style="width:${p[1]/p[2]*100}%"></i></div></div>`).join("")}</div>
+  <div class="tip">💡 ${tip}</div>
+  <div class="tip"><b>🎛 What-if simulator</b> – drag to change the loan amount<input type="range" id="wi" min="10" max="200" value="100"><div id="wo"></div></div>
+  <div class="tip">🏆 Maximum loan you could be approved for (${r.yrs} yrs): <b>${ml?fmt(ml):"Not eligible with a poor credit history"}</b></div><div class="row" style="justify-content:center"><button class="btn ghost" id="again">Try Again</button><button class="btn" id="pdf">⬇ Download PDF report</button></div></div>`;
+  r.tip=tip;$("again").onclick=reset;$("pdf").onclick=()=>savePdf(r);wire(r);
+}
+function wire(r){const sl=$("wi"),o=$("wo");const upd=()=>{const a=Math.max(1e4,Math.round(r.amt*sl.value/100/1e4)*1e4),x=calc(a,r.yrs);o.innerHTML=`<b>${fmt(a)}</b> → score <b style="color:${x.approved?'var(--ok)':'var(--bad)'}">${x.score}</b> · EMI ${fmt(x.E)} · ${x.approved?"Approved":"Rejected"}`};sl.oninput=upd;upd()}
+function reset(){
+  $("form").reset();$("ten").value="20";document.querySelectorAll(".err").forEach(e=>e.classList.remove("err"));
+  $("out").innerHTML='<div class="empty"><div class="ic">📊</div><p><b>Prediction Score</b><br>Fill the form and press “Predict Loan Status”.</p></div>';
+  $("form").scrollIntoView({behavior:"smooth",block:"center"});
+}
+$("go").onclick=()=>{
+  if(!validate()){$("out").innerHTML='<div class="empty"><div class="ic">⚠️</div><p>Please complete the highlighted fields.</p></div>';return}
+  const r=predict();show(r);
+  hist.unshift(r);hist=hist.slice(0,5);if(user)S("loanai_hist_"+user.email,hist);renderDash();
+  $("histbox").style.display="block";
+  $("hist").innerHTML=hist.map((h,i)=>`<tr><td>${i+1}</td><td>${fmt(h.inc)}</td><td>${fmt(h.amt)}</td><td>${h.cred?"Good":"Poor"}</td><td>${h.score}</td><td style="color:${h.approved?"var(--ok)":"var(--bad)"};font-weight:700">${h.approved?"Approved":"Rejected"}</td></tr>`).join("");
+  if(window.innerWidth<820)$("out").scrollIntoView({behavior:"smooth"});
+};
+$("demo").onclick=()=>{
+  const v={gender:"Male",married:"Yes",edu:"Graduate",self:"No",inc:60000,co:20000,amt:2500000,ten:20,cred:"1",area:"Semi-Urban"};
+  Object.entries(v).forEach(([k,x])=>$(k).value=x);
+  document.querySelectorAll(".err").forEach(e=>e.classList.remove("err"));
+};
+// auth
+const J=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+const S=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let user=null,mode="in";
+async function H(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function setUser(u){user=u;S("loanai_session",u?u.email:null);$("authBtn").textContent=u?"Logout ("+u.name.split(" ")[0]+")":"Login";$("ptitle").textContent=u?"Welcome, "+u.name.split(" ")[0]+" 👋":"Loan Prediction";hist=u?J("loanai_hist_"+u.email,[]):[];$("histbox").style.display=hist.length?"block":"none";$("hist").innerHTML=hist.map((h,i)=>`<tr><td>${i+1}</td><td>${fmt(h.inc)}</td><td>${fmt(h.amt)}</td><td>${h.cred?"Good":"Poor"}</td><td>${h.score}</td><td style="color:${h.approved?"var(--ok)":"var(--bad)"};font-weight:700">${h.approved?"Approved":"Rejected"}</td></tr>`).join("");renderDash()}
+function tab(m){mode=m;document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===m));$("nameW").hidden=m!=="up";$("as").textContent=m==="up"?"Create account":"Login";$("am").textContent=""}
+const closeM=()=>$("modal").hidden=true;
+$("authBtn").onclick=()=>{if(user){setUser(null)}else{tab("in");$("modal").hidden=false}};
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>tab(b.dataset.t));
+$("mx").onclick=closeM;$("modal").onclick=e=>{if(e.target.id==="modal")closeM()};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeM()});
+$("as").onclick=async()=>{
+ const em=$("ae").value.trim().toLowerCase(),pw=$("ap").value,nm=$("an").value.trim(),m=$("am");
+ if(!/^\S+@\S+\.\S+$/.test(em)||pw.length<6||(mode==="up"&&!nm)){m.textContent="Enter a valid email, a name (sign up) and a password of 6+ characters.";return}
+ const us=J("loanai_users",{}),h=await H(em+pw);
+ if(mode==="up"){if(us[em]){m.textContent="Account already exists. Please login.";return}us[em]={name:nm,h};S("loanai_users",us)}
+ else if(!us[em]||us[em].h!==h){m.textContent="Wrong email or password.";return}
+ setUser({email:em,name:us[em].name});closeM();$("af").reset();
+};
+{const sid=J("loanai_session",null),u=sid&&J("loanai_users",{})[sid];if(u)setUser({email:sid,name:u.name})}
+// pdf report
+const pe=s=>String(s).replace(/[^\x20-\x7E]/g,"").replace(/[\\()]/g,"\\$&");
+const money=n=>"Rs. "+Math.round(n).toLocaleString("en-IN");
+const wrap=(s,n)=>{const o=[];let l="";s.split(" ").forEach(w=>{if((l+" "+w).length>n){o.push(l);l=w}else l=l?l+" "+w:w});if(l)o.push(l);return o};
+function makePdf(L){
+ let y=800,c="";L.forEach(([t,s,b])=>{y-=s+8;c+=`BT /${b?"F2":"F1"} ${s} Tf 50 ${y} Td (${pe(t)}) Tj ET\n`});
+ const o=[];o[1]="<</Type/Catalog/Pages 2 0 R>>";o[2]="<</Type/Pages/Kids[3 0 R]/Count 1>>";
+ o[3]="<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]/Resources<</Font<</F1 4 0 R/F2 5 0 R>>>>/Contents 6 0 R>>";
+ o[4]="<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>";o[5]="<</Type/Font/Subtype/Type1/BaseFont/Helvetica-Bold>>";
+ o[6]=`<</Length ${c.length}>>\nstream\n${c}endstream`;
+ let p="%PDF-1.4\n";const off=[];for(let i=1;i<=6;i++){off[i]=p.length;p+=`${i} 0 obj\n${o[i]}\nendobj\n`}
+ const x=p.length;p+="xref\n0 7\n0000000000 65535 f \n"+off.slice(1).map(v=>String(v).padStart(10,"0")+" 00000 n \n").join("")+`trailer\n<</Size 7/Root 1 0 R>>\nstartxref\n${x}\n%%EOF`;
+ return new Blob([p],{type:"application/pdf"})}
+async function savePdf(r){
+ const g=id=>$(id).value;
+ const L=[["LoanAI - Loan Approval Prediction Report",20,1],["Generated: "+new Date().toLocaleString("en-IN"),10],["",8],
+ ["Result: "+(r.approved?"LIKELY APPROVED":"LIKELY REJECTED")+"  |  Score: "+r.score+"/100",14,1],["",6],
+ ["Applicant details",13,1],
+ ["Gender: "+g("gender")+"   Married: "+g("married")+"   Education: "+g("edu")+"   Self employed: "+g("self"),10],
+ ["Applicant income: "+money(r.inc)+"/month   Co-applicant income: "+money(+g("co")||0)+"/month",10],
+ ["Loan amount: "+money(r.amt)+"   Tenure: "+r.yrs+" years   Property area: "+g("area"),10],
+ ["Credit history: "+(r.cred?"Good (1)":"Poor (0)"),10],["",6],
+ ["Analysis",13,1],["Estimated EMI: "+money(r.E)+" per month   EMI-to-income ratio: "+Math.round(r.ratio*100)+"%",10],
+ ...r.parts.map(p=>[p[0]+": "+p[1]+" / "+p[2],10]),["",6],["Suggestion",13,1],...wrap(r.tip||"",95).map(t=>[t,10]),["",6],
+ ...wrap("Educational demo only. Not financial advice or a real lending decision. Gender is not used in scoring.",100).map(t=>[t,8])];
+ try{const d=window.claude&&await claude.use("downloads");if(!d){window.print();return}
+ await d.save({filename:"loan-prediction-report.pdf",data:makePdf(L)})}
+ catch(e){if(!e||e.code!=="declined")alert("Could not save the PDF in this view. Please open the page in its own tab and try again.")}
+}
+// tools
+function calcEmi(){const P=+$("ca").value||0,r=+$("cr").value||0,y=+$("cy").value;$("cyv").textContent=y;const n=y*12,i=r/1200,e=P>0?(i?P*i*Math.pow(1+i,n)/(Math.pow(1+i,n)-1):P/n):0,t=e*n,it=t-P,p=t?it/t*100:0;$("ce").textContent=fmt(e);$("ci").textContent=fmt(it);$("ct").textContent=fmt(t);$("dn").style.setProperty("--p",p);$("dp").textContent=Math.round(p)+"%"}
+["ca","cr","cy"].forEach(k=>$(k).oninput=calcEmi);calcEmi();
+function useRate(r,y){$("cr").value=r;$("cy").value=y;calcEmi();$("ca").scrollIntoView({behavior:"smooth",block:"center"})}
+function renderDash(){const n=hist.length,a=hist.filter(h=>h.approved).length;$("dash").innerHTML=n?`<b>📈 Your dashboard</b><div class="meta"><div><b>${n}</b>Predictions</div><div><b style="color:var(--ok)">${a}</b>Approved</div><div><b style="color:var(--bad)">${n-a}</b>Rejected</div></div><div class="spark">${hist.slice().reverse().map(h=>`<i title="Score ${h.score}" style="height:${h.score}%;background:${h.approved?"var(--ok)":"var(--bad)"}"></i>`).join("")}</div><small class="sub">Score of each prediction, oldest to newest. Log in to keep your history.</small>`:`<b>📈 Your dashboard</b><p class="sub" style="margin:8px 0 0">Run a prediction to see your approval stats and score trend here.</p>`}
+renderDash();
+document.querySelectorAll(".cnt").forEach(el=>{const n=+el.dataset.n;let s=null;const f=t=>{s=s||t;const k=Math.min((t-s)/1200,1);el.textContent=Math.round(n*k);if(k<1)requestAnimationFrame(f)};requestAnimationFrame(f)});
+addEventListener("scroll",()=>{$("top").style.display=scrollY>500?"block":"none"});$("top").onclick=()=>scrollTo({top:0,behavior:"smooth"});
+// theme toggle
+$("theme").onclick=()=>{
+  const r=document.documentElement,dark=r.getAttribute("data-theme")==="dark"||(!r.getAttribute("data-theme")&&matchMedia("(prefers-color-scheme:dark)").matches);
+  r.setAttribute("data-theme",dark?"light":"dark");
+};
+// active nav link
+const links=document.querySelectorAll("nav a[data-s]");
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)links.forEach(l=>l.classList.toggle("on",l.dataset.s===e.target.id))}),{threshold:.35});
+["home","definition","prediction","tools","about"].forEach(id=>io.observe($(id)));
+</script>
+</body>
+</html>
